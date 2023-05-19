@@ -1,6 +1,7 @@
 #include <HCSR04.h>
 #include <Servo.h>
 #include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 
 //definirea servomotorului:
 Servo servo;
@@ -24,6 +25,34 @@ int isOut = 0;
 int redLed = 5;
 int greenLed = 6;
 
+//definire LCD-ului
+LiquidCrystal_I2C lcd(0x3F, 8, 9);  
+
+//functie pentru afisarea locurilor libere
+void printFreePlacesOnLCD() {
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("LOCURI LIBERE:");
+  lcd.setCursor(7,1);
+  lcd.print(freePlaces);
+}
+
+//functie de afisaj la deschiderea barierei
+void printOpeningBarrierOnLCD() {
+  lcd.setCursor(4,0);
+  lcd.print("Bariera");
+  lcd.setCursor(2,1);
+  lcd.print("se deschide");
+}
+
+//functie de afisaj la inchiderea barierei
+void printClosingBarrierOnLCD() {
+  lcd.setCursor(4,0);
+  lcd.print("Bariera");
+  lcd.setCursor(2,1);
+  lcd.print("se inchide");
+}
+
 //functie pentru aprinderea ledurilor
 void ledHandler() {
   if (freePlaces > 0) {
@@ -39,7 +68,8 @@ void ledHandler() {
 void enterHandler(int sensorInValue, int sensorOutValue) {
   if ((sensorInValue >= 2 && sensorInValue <= 5) && freePlaces > 0 && isIn == 0) {
     for (int p=80 ; p>=0 ; p=p-4) {
-      printf("Bariera se deschide pentru intrare!");
+      printOpeningBarrierOnLCD();
+      servo.write(p);
     } 
     isIn = 1;
     freePlaces--;
@@ -47,7 +77,8 @@ void enterHandler(int sensorInValue, int sensorOutValue) {
   if ((sensorOutValue >= 7 && sensorOutValue <= 9)) {
     delay(2000);
     for (int p=0 ; p<=80; p=p+4) {
-      printf("Bariera se inchide pentru intrare!");
+      printClosingBarrierOnLCD();
+      servo.write(p);
     }
     isIn = 0;
   }
@@ -57,7 +88,8 @@ void enterHandler(int sensorInValue, int sensorOutValue) {
 void exitHandler(int sensorInValue, int sensorOutValue) {
   if ((sensorOutValue >= 2 && sensorOutValue <= 5) && isOut == 0) {
     for (int p=95 ; p>=10 ; p=p-4) {
-      printf("Bariera se deschide pentru iesire!");
+      printOpeningBarrierOnLCD();
+      servo.write(p);
     }
     isOut = 1;
     freePlaces++;
@@ -66,7 +98,8 @@ void exitHandler(int sensorInValue, int sensorOutValue) {
   if (sensorInValue >= 7 && sensorInValue <=9) {
     delay(2000);
     for (int p=10 ; p<=95 ; p=p+2) {
-      printf("Bariera se inchide pentru iesire!");
+      printClosingBarrierOnLCD();
+      servo.write(p);
     }
     isOut = 0;
   }
